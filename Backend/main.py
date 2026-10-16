@@ -23,21 +23,34 @@ app = FastAPI(
 # CORS CONFIGURATION
 # ==========================================
 
+
+import os
+
+frontend_origin = os.getenv("FRONTEND_ORIGIN", "").strip()
+
+allowed_origins = [
+    "http://127.0.0.1:5500",
+    "http://localhost:5500",
+    "http://127.0.0.1:3000",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+]
+
+if frontend_origin:
+    allowed_origins.extend(
+        origin.strip().rstrip("/")
+        for origin in frontend_origin.split(",")
+        if origin.strip()
+    )
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://127.0.0.1:5500",
-        "http://localhost:5500",
-        "http://127.0.0.1:3000",
-        "http://localhost:3000",
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
-
 
 # ==========================================
 # REQUEST MODEL

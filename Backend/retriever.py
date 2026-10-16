@@ -1,30 +1,17 @@
-"""
-Portfolio RAG retrieval module.
 
-This module follows the logic from the Jupyter notebooks:
-- Load portfolio.json
-- Format portfolio sections into readable documents
-- Keep each project as a separate document
-- Create normalized embeddings and a FAISS inner-product index
-- Detect sections/projects and retrieve relevant context
 """
-import os
-
-# Limit CPU thread usage to reduce overhead
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+Lightweight portfolio retrieval for Render free tier.
+No FAISS, PyTorch, or Sentence Transformers required.
+Supports dynamic project names, section aliases, and global fallback.
+"""
 
 import json
+import re
 from pathlib import Path
-
-import faiss
-import numpy as np
-from sentence_transformers import SentenceTransformer
 
 
 # ============================================================
-# PATHS AND PORTFOLIO DATA
+# LOAD PORTFOLIO DATA
 # ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -38,98 +25,93 @@ with open(PORTFOLIO_PATH, "r", encoding="utf-8") as file:
 # FORMAT PORTFOLIO DATA
 # ============================================================
 
-def format_value(value, indent=0):
-    """Convert dictionaries and lists into readable text."""
-
+def format_value(value):
+    """Convert nested dictionaries and lists into readable text."""
     if isinstance(value, dict):
         lines = []
 
-        for key, val in value.items():
-            formatted_key = key.replace("_", " ").title()
+        for key, item in value.items():
+            label = key.replace("_", " ").replace("-", " ").title()
+            formatted = format_value(item)
 
-            if isinstance(val, (dict, list)):
-                lines.append(f"{formatted_key}:")
-                nested = format_value(val, indent + 1)
-                if nested:
-                    lines.append(nested)
-            else:
-                lines.append(f"{formatted_key}: {val}")
+            if formatted:
+                lines.append(f"{label}: {formatted}")
 
         return "\n".join(lines)
 
     if isinstance(value, list):
-        lines = []
+        return "\n".join(
+            f"- {format_value(item)}"
+            for item in value
+            if item is not None
+        )
 
-        for item in value:
-            if isinstance(item, dict):
-                lines.append(format_value(item, indent + 1))
-            else:
-                lines.append(f"- {item}")
-
-        return "\n".join(lines)
-
-    return str(value)
+    return str(value).strip() if value is not None else ""
 
 
 def create_project_document(project):
-    """Convert one project record into one self-contained document."""
-
+    """Create a readable document for an individual project."""
     if not isinstance(project, dict):
         return str(project)
 
-    project_name = (
+    name = (
         project.get("name")
         or project.get("title")
         or project.get("project")
         or "Unnamed Project"
     )
 
-    lines = [f"Project: {project_name}", ""]
+    details = {
+        key: value
+        for key, value in project.items()
+        if key not in ("name", "title", "project")
+    }
 
-    for key, value in project.items():
-        if key in ("name", "title", "project"):
-            continue
-
-        formatted_key = key.replace("_", " ").title()
-        lines.append(f"{formatted_key}:")
-        formatted_value = format_value(value)
-
-        if formatted_value:
-            lines.append(formatted_value)
-
-        lines.append("")
-
-    return "\n".join(lines).strip()
+    return f"Project: {name}\n{format_value(details)}"
 
 
 # ============================================================
-# CREATE CHUNKS: ONE DOCUMENT PER SECTION, ONE PER PROJECT
+# CREATE SEARCHABLE DOCUMENTS
 # ============================================================
 
 all_chunks = []
+
+
+def add_chunk(text, section, project_name=None):
+    """Add a document with consistent metadata."""
+    text = text.strip()
+
+    if not text:
+        return
+
+    metadata = {
+        "source": "portfolio",
+        "section": section,
+    }
+
+    if project_name:
+        metadata["project"] = project_name
+
+    all_chunks.append({
+        "text": text,
+        "metadata": metadata,
+    })
+
 
 for section, content in portfolio.items():
     if section == "projects":
         continue
 
-    text = format_value(content)
-
-    if text.strip():
-        all_chunks.append({
-            "text": text,
-            "metadata": {
-                "source": "portfolio",
-                "section": section,
-            },
-        })
+    add_chunk(
+        text=format_value(content),
+        section=section,
+    )
 
 
 projects = portfolio.get("projects", [])
 
 if isinstance(projects, list):
     for project in projects:
-        project_text = create_project_document(project)
-
         if isinstance(project, dict):
             project_name = (
                 project.get("name")
@@ -140,348 +122,345 @@ if isinstance(projects, list):
         else:
             project_name = "Unnamed Project"
 
-        all_chunks.append({
-            "text": project_text,
-            "metadata": {
-                "source": "portfolio",
-                "section": "projects",
-                "project": project_name,
-            },
-        })
+        add_chunk(
+            text=create_project_document(project),
+            section="projects",
+            project_name=project_name,
+        )
 
 elif isinstance(projects, dict):
-    for project_name, project_data in projects.items():
-        if isinstance(project_data, dict):
-            project_copy = project_data.copy()
-            project_copy.setdefault("name", project_name)
-            project_text = create_project_document(project_copy)
+    for project_name, details in projects.items():
+        if isinstance(details, dict):
+            project_data = dict(details)
+            project_data.setdefault("name", project_name)
         else:
-            project_text = (
-                f"Project: {project_name}\n\n{format_value(project_data)}"
-            )
+            project_data = {
+                "name": project_name,
+                "details": details,
+            }
 
-        all_chunks.append({
-            "text": project_text,
-            "metadata": {
-                "source": "portfolio",
-                "section": "projects",
-                "project": project_name,
-            },
-        })
+        add_chunk(
+            text=create_project_document(project_data),
+            section="projects",
+            project_name=project_name,
+        )
 
 
 # ============================================================
-# EMBEDDINGS AND FAISS INDEX
+# TEXT NORMALIZATION AND TOKENIZATION
 # ============================================================
 
-embedding_model = SentenceTransformer(
-    "sentence-transformers/all-MiniLM-L6-v2",
-    device="cpu"
-)
-chunk_texts = [chunk["text"] for chunk in all_chunks]
-
-if not chunk_texts:
-    raise ValueError(
-        f"No portfolio chunks were created from {PORTFOLIO_PATH}"
-    )
-
-embeddings = embedding_model.encode(
-    chunk_texts,
-    convert_to_numpy=True,
-    normalize_embeddings=True,
-).astype("float32")
-
-index = faiss.IndexFlatIP(embeddings.shape[1])
-index.add(embeddings)
+STOPWORDS = {
+    "the", "a", "an", "is", "are", "was", "were", "am",
+    "what", "who", "where", "when", "why", "how", "which",
+    "tell", "me", "about", "please", "can", "you", "your",
+    "his", "her", "he", "she", "i", "and", "or", "of",
+    "to", "in", "on", "for", "with", "do", "does", "did",
+    "has", "have", "had", "my", "he's", "it's", "their",
+    "this", "that", "these", "those", "would", "could",
+    "should", "explain", "describe", "give", "show",
+    "list", "me", "know", "much", "many", "some",
+    "please", "farhan", "shaik",
+}
 
 
-# ============================================================
-# PROJECT DETECTION
-# ============================================================
+def normalize_text(text):
+    """Normalize punctuation and spacing for matching."""
+    text = str(text).lower()
+    text = text.replace("&", " and ")
+    text = re.sub(r"[-_/]+", " ", text)
+    text = re.sub(r"[^a-z0-9+#.\s]", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
 
-def detect_project(query):
 
-    q = query.lower()
+def tokenize(text):
+    """Return meaningful words for keyword matching."""
+    words = re.findall(r"[a-zA-Z0-9+#.]+", text.lower())
 
-    project_mapping = {
-        "ux review tool": "UX Review Tool",
-
-        "anime & movie recommendation system":
-            "Anime & Movie Recommendation System",
-
-        "anime recommendation system":
-            "Anime & Movie Recommendation System",
-
-        "movie recommendation system":
-            "Anime & Movie Recommendation System",
-
-        "spam text detector":
-            "Spam Text Detector",
-
-        "airpulse":
-            "AirPulse Wireless Stethoscope - Cardiac Sense",
-
-        "air pulse":
-            "AirPulse Wireless Stethoscope - Cardiac Sense",
-
-        "cardiac sense":
-            "AirPulse Wireless Stethoscope - Cardiac Sense",
-
-        "ai portfolio assistant":
-            "AI Portfolio Assistant"
+    return {
+        word
+        for word in words
+        if word not in STOPWORDS and len(word) > 1
     }
 
-    for keyword, project_name in project_mapping.items():
-
-        if keyword in q:
-            return project_name
-
-    return None
-
 
 # ============================================================
-# SECTION DETECTION
+# SECTION ALIASES
 # ============================================================
 
-def detect_section(query):
-
-    q = query.lower().strip()
-
-    # ==================================================
-    # PROJECT NAME DETECTION
-    # ==================================================
-
-    project_names = [
-        "ux review tool",
-        "anime & movie recommendation system",
-        "anime recommendation system",
-        "movie recommendation system",
-        "spam text detector",
-        "airpulse",
-        "air pulse",
-        "cardiac sense",
-        "ai portfolio assistant"
-    ]
-
-    if any(project in q for project in project_names):
-        return "projects"
-
-
-    # ==================================================
-    # PROJECTS
-    # ==================================================
-
-    project_keywords = [
-        "project",
-        "projects",
-        "portfolio project",
-        "portfolio projects",
-        "what projects",
-        "projects worked on",
-        "projects built",
-        "what did farhan build",
-        "what has farhan built",
-        "what did he build",
-        "what has he built"
-    ]
-
-    if any(keyword in q for keyword in project_keywords):
-        return "projects"
-
-
-    # ==================================================
-    # EXPERIENCE
-    # ==================================================
-
-    experience_keywords = [
-        "experience",
-        "work experience",
-        "professional experience",
-        "internship",
-        "internships",
-        "intern",
-        "job experience",
-        "work history",
-        "where did farhan work",
-        "where has farhan worked",
-        "where did he work",
-        "where has he worked",
-        "worked at",
-        "worked for",
-        "employment",
-        "company did farhan work",
-        "kodnest"
-    ]
-
-    if any(keyword in q for keyword in experience_keywords):
-        return "experience"
-
-
-    # ==================================================
-    # SKILLS
-    # ==================================================
-
-    skill_keywords = [
-        "skills",
-        "technical skills",
-        "technologies",
-        "technology",
-        "tech stack",
-        "programming languages",
-        "frameworks",
-        "libraries",
-        "tools",
-        "what can farhan do"
-    ]
-
-    if any(keyword in q for keyword in skill_keywords):
-        return "skills"
-
-
-    # ==================================================
-    # EDUCATION
-    # ==================================================
-
-    education_keywords = [
-        "education",
-        "educational background",
-        "degree",
-        "college",
-        "university",
-        "school",
-        "studied",
-        "study",
-        "cgpa",
-        "academic background"
-    ]
-
-    if any(keyword in q for keyword in education_keywords):
-        return "education"
-
-
-    # ==================================================
-    # ACHIEVEMENTS
-    # ==================================================
-
-    achievement_keywords = [
-        "achievement",
-        "achievements",
-        "award",
-        "awards",
-        "won",
-        "winner",
-        "accomplishment",
-        "accomplishments",
-        "hackathon",
-        "nain"
-    ]
-
-    if any(keyword in q for keyword in achievement_keywords):
-        return "achievements"
-
-
-    # ==================================================
-    # CERTIFICATIONS
-    # ==================================================
-
-    certification_keywords = [
-        "certification",
-        "certifications",
-        "certificate",
-        "certificates",
-        "workshop",
-        "training",
-        "credentials"
-    ]
-
-    if any(keyword in q for keyword in certification_keywords):
-        return "certifications"
-
-
-    # ==================================================
-    # CONTACT
-    # ==================================================
-
-    contact_keywords = [
-        "contact",
-        "contact information",
-        "email",
-        "email address",
-        "phone",
-        "phone number",
-        "mobile",
-        "reach farhan",
-        "how can i contact",
-        "how to contact"
-    ]
-
-    if any(keyword in q for keyword in contact_keywords):
-        return "contact"
-
-
-    # ==================================================
-    # CAREER
-    # ==================================================
-
-    career_keywords = [
-        "career",
-        "career goals",
-        "career objective",
-        "target role",
-        "target roles",
-        "job",
-        "jobs",
-        "job opportunities",
-        "looking for",
-        "open to",
-        "what role",
-        "which role"
-    ]
-
-    if any(keyword in q for keyword in career_keywords):
-        return "career"
-
-
-    # ==================================================
-    # ABOUT
-    # ==================================================
-
-    about_keywords = [
+SECTION_ALIASES = {
+    "about": [
         "about farhan",
         "about shaik farhan",
         "who is farhan",
         "who is shaik farhan",
         "introduce farhan",
+        "tell me about yourself",
         "tell me about farhan",
         "professional summary",
-        "background"
-    ]
-
-    if any(keyword in q for keyword in about_keywords):
-        return "about"
-
-
-    # ==================================================
-    # PERSONAL
-    # ==================================================
-
-    personal_keywords = [
-        "name",
-        "location",
+        "profile summary",
+        "personal introduction",
+        "biography",
+    ],
+    "personal": [
+        "full name",
+        "your name",
+        "his name",
         "where is farhan from",
-        "where is farhan located",
-        "who are you"
-    ]
+        "where does farhan come from",
+        "hometown",
+        "location",
+        "personal details",
+    ],
+    "education": [
+        "education",
+        "educational background",
+        "academic background",
+        "degree",
+        "college",
+        "university",
+        "school",
+        "qualification",
+        "qualifications",
+        "where did farhan study",
+        "what did farhan study",
+        "cgpa",
+        "marks",
+        "percentage",
+    ],
+    "skills": [
+        "skills",
+        "technical skills",
+        "soft skills",
+        "technical knowledge",
+        "technologies",
+        "technology stack",
+        "tech stack",
+        "programming languages",
+        "frameworks",
+        "libraries",
+        "tools",
+        "what can farhan do",
+        "what technologies does he know",
+        "areas of expertise",
+    ],
+    "experience": [
+        "experience",
+        "work experience",
+        "professional experience",
+        "job experience",
+        "work history",
+        "employment history",
+        "internship",
+        "internships",
+        "previous jobs",
+        "where did farhan work",
+        "where has farhan worked",
+        "kodnest",
+    ],
+    "projects": [
+        "project",
+        "projects",
+        "portfolio projects",
+        "projects built",
+        "projects developed",
+        "projects created",
+        "what has farhan built",
+        "what did farhan build",
+        "list all projects",
+    ],
+    "achievements": [
+        "achievements",
+        "achievement",
+        "awards",
+        "award",
+        "accomplishments",
+        "hackathon",
+        "funding",
+        "nain",
+        "what has farhan won",
+    ],
+    "certifications": [
+        "certifications",
+        "certification",
+        "certificates",
+        "certificate",
+        "credentials",
+        "training",
+        "professional badges",
+    ],
+    "contact": [
+        "contact",
+        "contact details",
+        "contact information",
+        "email address",
+        "email",
+        "phone number",
+        "mobile number",
+        "how can i contact farhan",
+        "how do i reach farhan",
+    ],
+    "career": [
+        "career",
+        "career goals",
+        "career objective",
+        "career aspirations",
+        "target role",
+        "target job",
+        "job opportunities",
+        "looking for a job",
+        "what role is farhan looking for",
+    ],
+}
 
-    if any(keyword in q for keyword in personal_keywords):
-        return "personal"
 
+def detect_section(query):
+    """Identify the portfolio section using aliases and keywords."""
+    q = normalize_text(query)
+
+    # Exact aliases and phrases take priority.
+    for section, aliases in SECTION_ALIASES.items():
+        for alias in aliases:
+            if normalize_text(alias) in q:
+                return section
+
+    # Match actual section names from portfolio.json dynamically.
+    for section in portfolio:
+        normalized_section = normalize_text(section)
+        if normalized_section and normalized_section in q:
+            return section
+
+    # General keyword fallback for common variations.
+    section_keywords = {
+        "about": {"introduce", "introduction", "biography", "profile"},
+        "personal": {"name", "hometown", "location"},
+        "education": {
+            "studied", "study", "degree", "college", "university",
+            "cgpa", "qualification", "academic",
+        },
+        "skills": {
+            "skill", "skills", "technology", "technologies",
+            "programming", "framework", "library", "libraries",
+        },
+        "experience": {
+            "intern", "internship", "employment", "experience",
+        },
+        "projects": {
+            "project", "projects", "built", "developed", "created",
+        },
+        "achievements": {
+            "achievement", "achievements", "award", "awards",
+            "hackathon", "funding",
+        },
+        "certifications": {
+            "certificate", "certification", "certifications", "badge",
+        },
+        "contact": {"email", "phone", "contact", "mobile"},
+        "career": {"career", "job", "jobs", "role", "opportunities"},
+    }
+
+    query_words = set(q.split())
+
+    for section, keywords in section_keywords.items():
+        if query_words & keywords:
+            return section
 
     return None
 
 
 # ============================================================
-# SEARCH PORTFOLIO
+# DYNAMIC PROJECT ALIASES
+# ============================================================
+
+# These are optional extra aliases for project names that might
+# be described differently in a visitor's question.
+EXTRA_PROJECT_ALIASES = {
+    "airpulse": [
+        "air pulse",
+        "cardiac sense",
+        "wireless stethoscope",
+        "digital stethoscope",
+        "smart stethoscope",
+        "heart sound project",
+    ],
+    "spam text detector": [
+        "spam detector",
+        "spam message classifier",
+        "spam detection",
+    ],
+    "ux review tool": [
+        "ux reviewer",
+        "ui ux review",
+        "website design review",
+        "design feedback tool",
+    ],
+    "anime and movie recommendation system": [
+        "anime recommendation",
+        "movie recommendation",
+        "recommendation system",
+        "recommendation engine",
+    ],
+    "ai portfolio assistant": [
+        "portfolio chatbot",
+        "portfolio assistant",
+        "portfolio ai chatbot",
+    ],
+}
+
+
+def detect_project(query):
+    """Find projects using names from JSON and optional aliases."""
+    q = normalize_text(query)
+
+    # First use project names loaded dynamically from JSON.
+    project_chunks = [
+        chunk for chunk in all_chunks
+        if chunk["metadata"].get("section") == "projects"
+    ]
+
+    for chunk in project_chunks:
+        project_name = chunk["metadata"].get("project", "")
+        normalized_name = normalize_text(project_name)
+
+        if normalized_name and normalized_name in q:
+            return project_name
+
+    # Then check additional names and descriptions.
+    for alias_group, aliases in EXTRA_PROJECT_ALIASES.items():
+        candidates = [alias_group] + aliases
+
+        if any(normalize_text(alias) in q for alias in candidates):
+            # Resolve the alias group against actual project names.
+            for chunk in project_chunks:
+                project_name = chunk["metadata"].get("project", "")
+                name = normalize_text(project_name)
+
+                if (
+                    normalize_text(alias_group) in name
+                    or name in normalize_text(alias_group)
+                ):
+                    return project_name
+
+                if any(
+                    normalize_text(alias) in name
+                    or name in normalize_text(alias)
+                    for alias in aliases
+                ):
+                    return project_name
+
+            # Use a partial project-name match as a final fallback.
+            alias_words = tokenize(alias_group)
+
+            for chunk in project_chunks:
+                project_name = chunk["metadata"].get("project", "")
+                if alias_words & tokenize(project_name):
+                    return project_name
+
+    return None
+
+
+# ============================================================
+# SEARCH AND RANK DOCUMENTS
 # ============================================================
 
 def search_portfolio(
@@ -490,29 +469,15 @@ def search_portfolio(
     section_filter=None,
     project_filter=None,
 ):
-    """Search FAISS, then apply metadata filters before returning results."""
+    """Rank documents by keyword overlap."""
+    query_words = tokenize(query)
 
-    if not all_chunks:
+    if not query_words:
         return []
 
-    query_embedding = embedding_model.encode(
-        [query],
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-    ).astype("float32")
+    scored = []
 
-    # Search more candidates because metadata filtering may discard matches.
-    search_k = min(max(top_k * 10, top_k), len(all_chunks))
-
-    scores, indices = index.search(query_embedding, search_k)
-
-    results = []
-
-    for score, idx in zip(scores[0], indices[0]):
-        if idx < 0:
-            continue
-
-        chunk = all_chunks[int(idx)]
+    for chunk in all_chunks:
         metadata = chunk["metadata"]
 
         if (
@@ -521,31 +486,59 @@ def search_portfolio(
         ):
             continue
 
-        if (
-            project_filter is not None
-            and metadata.get("project") != project_filter
-        ):
+        if project_filter is not None:
+            actual_project = normalize_text(
+                metadata.get("project", "")
+            )
+            wanted_project = normalize_text(project_filter)
+
+            if (
+                wanted_project not in actual_project
+                and actual_project not in wanted_project
+            ):
+                continue
+
+        searchable_text = (
+            metadata.get("section", "")
+            + " "
+            + metadata.get("project", "")
+            + " "
+            + chunk["text"]
+        )
+
+        document_words = tokenize(searchable_text)
+        overlap = query_words & document_words
+
+        if not overlap:
             continue
 
+        # Prefer documents matching more of the question.
+        score = len(overlap) / (len(query_words) ** 0.5)
+
+        # Give a small boost when the query contains the project name.
+        project_name = normalize_text(metadata.get("project", ""))
+        normalized_query = normalize_text(query)
+
+        if project_name and project_name in normalized_query:
+            score += 2.0
+
+        scored.append((score, chunk))
+
+    scored.sort(key=lambda item: item[0], reverse=True)
+
+    results = []
+    for score, chunk in scored[:top_k]:
         results.append({
             "score": float(score),
             "text": chunk["text"],
-            "metadata": metadata,
+            "metadata": chunk["metadata"],
         })
-
-        if len(results) >= top_k:
-            break
 
     return results
 
 
-# ============================================================
-# RETURN ALL PROJECTS / EXPERIENCE WHEN ASKED FOR A LIST
-# ============================================================
-
 def get_all_projects():
-    """Return every project document without similarity filtering."""
-
+    """Return every project document."""
     return [
         {
             "score": 1.0,
@@ -558,8 +551,7 @@ def get_all_projects():
 
 
 def get_all_experience():
-    """Return every experience document without similarity filtering."""
-
+    """Return experience documents."""
     return [
         {
             "score": 1.0,
@@ -572,68 +564,158 @@ def get_all_experience():
 
 
 # ============================================================
-# RETRIEVE CONTEXT
+# PROFILE QUESTION HANDLING
+# ============================================================
+
+def is_general_profile_question(query):
+    """Recognize broad questions about Farhan."""
+    q = normalize_text(query)
+
+    phrases = [
+        "tell me about farhan",
+        "tell me about shaik farhan",
+        "about farhan",
+        "who is farhan",
+        "who is shaik farhan",
+        "introduce farhan",
+        "tell me about yourself",
+        "describe farhan",
+        "give me an introduction",
+        "professional introduction",
+    ]
+
+    return any(normalize_text(phrase) in q for phrase in phrases)
+
+
+def retrieve_profile_context(top_k=7):
+    """Retrieve profile information from relevant sections."""
+    preferred_sections = ["about", "personal", "education", "skills"]
+
+    results = []
+
+    for section in preferred_sections:
+        for chunk in all_chunks:
+            if chunk["metadata"].get("section") == section:
+                results.append({
+                    "score": 1.0,
+                    "text": chunk["text"],
+                    "metadata": chunk["metadata"],
+                })
+
+                if len(results) >= top_k:
+                    return results
+
+    # If section names differ from expected names, search broadly.
+    return [
+        {
+            "score": 1.0,
+            "text": chunk["text"],
+            "metadata": chunk["metadata"],
+        }
+        for chunk in all_chunks[:top_k]
+    ]
+
+
+# ============================================================
+# MAIN RETRIEVAL FUNCTION
 # ============================================================
 
 def retrieve_context(query, top_k=7):
-    """Route the query, then retrieve only relevant portfolio documents."""
+    """Retrieve relevant facts for the existing RAG pipeline."""
+    q = query.strip()
 
-    section = detect_section(query)
-    project = detect_project(query)
-    q = query.lower()
+    if not q:
+        return []
 
-    project_list_patterns = [
-        "what projects",
-        "which projects",
-        "list projects",
-        "projects has farhan",
-        "projects did farhan",
-        "projects has he",
-        "projects did he",
-        "what has farhan built",
-        "what did farhan build",
-    ]
+    # Broad profile questions should not depend on keyword overlap.
+    if is_general_profile_question(q):
+        return retrieve_profile_context(top_k=top_k)
 
-    if (
-        section == "projects"
-        and any(pattern in q for pattern in project_list_patterns)
-    ):
-        return get_all_projects()
+    # Find an explicitly mentioned project.
+    project = detect_project(q)
 
-    if project is not None:
-        # Do not return unrelated chunks if this project cannot be found.
-        return search_portfolio(
-            query=query,
+    if project:
+        results = search_portfolio(
+            q,
             top_k=top_k,
             section_filter="projects",
             project_filter=project,
         )
 
-    experience_list_patterns = [
-        "what experience",
-        "work experience",
-        "professional experience",
-        "where did farhan work",
-        "where has farhan worked",
-        "where did he work",
-        "where has he worked",
-        "work history",
-        "internships",
+        if results:
+            return results
+
+        # Try the whole project section if the exact name differs.
+        results = search_portfolio(
+            q,
+            top_k=top_k,
+            section_filter="projects",
+        )
+
+        if results:
+            return results
+
+    # Requests for every project should return all project documents.
+    project_list_phrases = [
+        "what projects",
+        "which projects",
+        "list projects",
+        "all projects",
+        "projects has farhan",
+        "what has farhan built",
+        "what did farhan build",
+        "projects did farhan",
     ]
 
-    if (
-        section == "experience"
-        and any(pattern in q for pattern in experience_list_patterns)
+    if any(
+        normalize_text(phrase) in normalize_text(q)
+        for phrase in project_list_phrases
     ):
-        return get_all_experience()
+        return get_all_projects()
 
-    if section is not None:
-        # Keep the search inside the detected section.
-        return search_portfolio(
-            query=query,
+    # Requests for a list of experience entries.
+    experience_list_phrases = [
+        "work experience",
+        "professional experience",
+        "work history",
+        "list internships",
+        "all internships",
+    ]
+
+    if any(
+        normalize_text(phrase) in normalize_text(q)
+        for phrase in experience_list_phrases
+    ):
+        results = get_all_experience()
+        if results:
+            return results
+
+    # Search the detected section first.
+    section = detect_section(q)
+
+    if section:
+        results = search_portfolio(
+            q,
             top_k=top_k,
             section_filter=section,
         )
 
-    # For general questions without a detected section, search all sections.
-    return search_portfolio(query=query, top_k=top_k)
+        if results:
+            return results
+
+    # Important: if routing fails, search every section.
+    results = search_portfolio(q, top_k=top_k)
+
+    if results:
+        return results
+
+    # Last-resort fallback for very broad questions.
+    # This helps avoid an empty context when portfolio data exists.
+    return [
+        {
+            "score": 0.0,
+            "text": chunk["text"],
+            "metadata": chunk["metadata"],
+        }
+        for chunk in all_chunks[:min(top_k, len(all_chunks))]
+    ]
