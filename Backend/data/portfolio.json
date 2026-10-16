@@ -1,0 +1,649 @@
+{
+  "personal": {
+    "name": "Shaik Farhan",
+    "aliases": [
+      "Farhan",
+      "Shaik Farhan",
+      "Farhan Shaik"
+    ],
+    "location": "Bangalore, India",
+    "role": "Data Scientist, ML Engineer & AI Engineer",
+    "email": "shaikfarhan3100@gmail.com",
+    "phone": "+91 9741881031",
+    "availability": "Open to opportunities in Data Science, Machine Learning, AI/ML, and related roles."
+  },
+
+  "about": {
+    "summary": "Information Science and Engineering graduate with hands-on experience building real-world solutions across Data Science, Machine Learning, Deep Learning, and Generative AI. Winner of the NAIN Ideathon with ₹5 Lakhs in government funding for an innovative healthcare project. Passionate about transforming ideas into intelligent, scalable, and impactful technology solutions that solve real-world problems.",
+    "aliases": [
+      "about Farhan",
+      "about me",
+      "who is Farhan",
+      "who is Shaik Farhan",
+      "introduce Farhan",
+      "Farhan introduction",
+      "professional summary",
+      "profile",
+      "background",
+      "career background"
+    ],
+    "interests": [
+      "Data Science",
+      "Machine Learning",
+      "Artificial Intelligence",
+      "Generative AI",
+      "Large Language Models",
+      "Natural Language Processing",
+      "Healthcare AI",
+      "Recommendation Systems",
+      "AI Applications"
+    ]
+  },
+
+  "education": [
+    {
+      "institution": "Mangalore Institute of Technology & Engineering",
+      "degree": "Bachelor of Engineering in Information Science & Engineering",
+      "period": "2022 - 2026",
+      "cgpa": "8.0",
+      "aliases": [
+        "MITE",
+        "Mangalore Institute of Technology",
+        "engineering",
+        "bachelor degree",
+        "BE",
+        "ISE",
+        "Information Science Engineering",
+        "college",
+        "graduation"
+      ]
+    },
+    {
+      "institution": "Diamond College",
+      "degree": "Pre-University (PU)",
+      "period": "2020 - 2022",
+      "percentage": "85.5%",
+      "aliases": [
+        "PU",
+        "PUC",
+        "pre university",
+        "12th",
+        "12th standard",
+        "higher secondary"
+      ]
+    },
+    {
+      "institution": "Diamond High School",
+      "degree": "SSLC",
+      "period": "2020",
+      "percentage": "78.56%",
+      "aliases": [
+        "SSLC",
+        "10th",
+        "10th standard",
+        "school",
+        "high school"
+      ]
+    }
+  ],
+
+  "experience": [
+    {
+      "company": "KodNest Technologies Pvt. Ltd.",
+      "role": "Data Science Intern",
+      "period": "Jan 2026 - June 2026",
+      "aliases": [
+        "KodNest",
+        "KodNest Technologies",
+        "Data Science internship",
+        "internship",
+        "internship experience",
+        "work experience",
+        "professional experience"
+      ],
+      "technologies": [
+        "Python",
+        "Machine Learning",
+        "Pandas",
+        "NumPy",
+        "Matplotlib",
+        "Scikit-learn"
+      ],
+      "responsibilities": [
+        "Executed data preprocessing and analysis of healthcare datasets using Python, Pandas, NumPy, and Scikit-learn.",
+        "Conducted data cleaning, Exploratory Data Analysis (EDA), and feature engineering to enhance machine learning model performance.",
+        "Developed and assessed classification models using Scikit-learn under mentorship.",
+        "Designed data visualizations using Matplotlib to facilitate model analysis and interpretation.",
+        "Gained hands-on experience in the machine learning lifecycle including data preprocessing, model training, evaluation, and deployment."
+      ]
+    }
+  ],
+
+  "skills": {
+    "programming_languages": {
+      "items": [
+        "Python",
+        "JavaScript",
+        "SQL"
+      ],
+      "aliases": [
+        "programming skills",
+        "coding skills",
+        "programming languages",
+        "languages",
+        "coding"
+      ]
+    },
+
+    "machine_learning": {
+      "items": [
+        "Scikit-learn",
+        "Supervised Learning",
+        "Unsupervised Learning",
+        "Classification",
+        "Clustering",
+        "EDA",
+        "Feature Engineering",
+        "Feature Selection",
+        "Model Evaluation"
+      ],
+      "aliases": [
+        "machine learning",
+        "ML",
+        "machine learning skills",
+        "ML skills",
+        "machine learning algorithms",
+        "classification",
+        "clustering",
+        "data preprocessing",
+        "feature engineering"
+      ]
+    },
+
+    "deep_learning": {
+      "items": [
+        "PyTorch",
+        "TensorFlow",
+        "Convolutional Neural Networks (CNN)",
+        "Neural Networks"
+      ],
+      "aliases": [
+        "deep learning",
+        "DL",
+        "deep learning skills",
+        "neural networks",
+        "CNN",
+        "convolutional neural networks",
+        "PyTorch",
+        "TensorFlow"
+      ]
+    },
+
+    "nlp": {
+      "items": [
+        "Natural Language Processing",
+        "Text Preprocessing",
+        "GloVe Embeddings"
+      ],
+      "aliases": [
+        "NLP",
+        "natural language processing",
+        "text processing",
+        "text classification",
+        "NLP skills",
+        "language processing"
+      ]
+    },
+
+    "generative_ai": {
+      "items": [
+        "Generative AI",
+        "Large Language Models (LLMs)",
+        "Prompt Engineering",
+        "Retrieval-Augmented Generation (RAG)",
+        "Embeddings"
+      ],
+      "aliases": [
+        "Generative AI",
+        "GenAI",
+        "Gen AI",
+        "LLM",
+        "LLMs",
+        "Large Language Models",
+        "AI chatbot",
+        "RAG",
+        "Retrieval Augmented Generation",
+        "prompt engineering",
+        "embeddings",
+        "AI applications"
+      ]
+    },
+
+    "frameworks_and_libraries": {
+      "items": [
+        "Pandas",
+        "NumPy",
+        "Matplotlib",
+        "Librosa",
+        "Flask",
+        "FastAPI",
+        "Streamlit",
+        "React.js"
+      ],
+      "aliases": [
+        "frameworks",
+        "libraries",
+        "Python libraries",
+        "development frameworks",
+        "technical frameworks"
+      ]
+    },
+
+    "computer_vision": {
+      "items": [
+        "OpenCV",
+        "Tesseract OCR"
+      ],
+      "aliases": [
+        "computer vision",
+        "CV",
+        "image processing",
+        "OCR",
+        "Optical Character Recognition"
+      ]
+    },
+
+    "tools": {
+      "items": [
+        "Git",
+        "GitHub",
+        "Jira",
+        "Power BI",
+        "Postman",
+        "Jupyter Notebook",
+        "Google Colab",
+        "Figma"
+      ],
+      "aliases": [
+        "tools",
+        "developer tools",
+        "software tools",
+        "platforms",
+        "technical tools"
+      ]
+    },
+
+    "soft_skills": {
+      "items": [
+        "Analytical Thinking",
+        "Problem-Solving",
+        "Collaboration",
+        "Teamwork"
+      ],
+      "aliases": [
+        "soft skills",
+        "professional skills",
+        "personal skills",
+        "interpersonal skills"
+      ]
+    }
+  },
+
+  "projects": [
+    {
+      "name": "AirPulse Wireless Stethoscope - Cardiac Sense",
+      "category": "AI Healthcare",
+      "aliases": [
+        "AirPulse",
+        "Air Pulse",
+        "Cardiac Sense",
+        "CardiacSense",
+        "heart sound project",
+        "heart sound classification",
+        "heart sound classifier",
+        "stethoscope project",
+        "wireless stethoscope",
+        "AI stethoscope",
+        "healthcare AI project",
+        "healthcare project",
+        "heart disease AI",
+        "cardiac project",
+        "medical AI project",
+        "heart sound AI",
+        "deep learning healthcare project"
+      ],
+      "description": "AI-powered heart sound classification system.",
+      "technologies": [
+        "Python",
+        "PyTorch",
+        "CNN",
+        "Librosa",
+        "NumPy",
+        "Pandas",
+        "Matplotlib",
+        "Google Colab"
+      ],
+      "details": [
+        "Developed an AI-powered heart sound classification system using Python, PyTorch, and CNN.",
+        "Converted heart sound recordings into Mel Spectrograms using Librosa.",
+        "Performed audio preprocessing, feature extraction, and data preparation.",
+        "Classified heart sounds into Normal, Murmur, Artifact, Extrastole, and Extra Heart Sounds.",
+        "Built an end-to-end machine learning pipeline from audio preprocessing to model training and prediction."
+      ],
+      "achievement": "Government-funded project with ₹5 Lakhs funding under Karnataka NAIN 2.0.",
+      "links": {
+        "github": "ADD_GITHUB_LINK_HERE",
+        "demo": "ADD_DEMO_LINK_HERE"
+      }
+    },
+
+    {
+      "name": "Spam Text Detector",
+      "category": "NLP / Deep Learning",
+      "aliases": [
+        "Spam Text Detector",
+        "spam detector",
+        "spam classifier",
+        "SMS spam detector",
+        "SMS classifier",
+        "spam detection project",
+        "NLP spam project",
+        "spam classification",
+        "text classification project",
+        "spam or ham",
+        "ham spam classifier"
+      ],
+      "description": "NLP-based SMS spam classification system.",
+      "technologies": [
+        "Python",
+        "NLP",
+        "TensorFlow",
+        "Keras",
+        "GloVe",
+        "Pandas",
+        "NumPy",
+        "NLTK",
+        "Scikit-learn"
+      ],
+      "details": [
+        "Developed an NLP-based spam classifier using GloVe embeddings and a Dense Neural Network.",
+        "Classified SMS messages into Spam and Ham categories.",
+        "Performed text preprocessing, tokenization, padding, and class balancing.",
+        "Evaluated model performance using Accuracy, F1-score, and Confusion Matrix."
+      ],
+      "links": {
+        "github": "ADD_GITHUB_LINK_HERE",
+        "demo": "ADD_DEMO_LINK_HERE"
+      }
+    },
+
+    {
+      "name": "UX Review Tool",
+      "category": "AI / UI UX",
+      "aliases": [
+        "UX Review Tool",
+        "UX tool",
+        "UI UX tool",
+        "UI/UX analyzer",
+        "UX analyzer",
+        "UI analyzer",
+        "landing page analyzer",
+        "landing page review tool",
+        "website UX analyzer",
+        "website review tool",
+        "screenshot analyzer",
+        "AI UX tool",
+        "AI UI UX project",
+        "design review tool",
+        "UI UX project"
+      ],
+      "description": "Web application that analyzes landing page screenshots and provides AI-assisted UI/UX recommendations.",
+      "technologies": [
+        "Python",
+        "Flask",
+        "React.js",
+        "JavaScript",
+        "HTML",
+        "OpenCV",
+        "Tesseract OCR",
+        "Tailwind CSS"
+      ],
+      "details": [
+        "Developed a React.js and Flask web application for analyzing landing page screenshots.",
+        "Implemented image upload functionality and connected the frontend with backend REST APIs.",
+        "Used OpenCV for image preprocessing and Tesseract OCR for extracting text from screenshots.",
+        "Built a responsive and reusable UI with dark mode."
+      ],
+      "links": {
+        "github": "ADD_GITHUB_LINK_HERE",
+        "demo": "ADD_DEMO_LINK_HERE"
+      }
+    },
+
+    {
+      "name": "AI Portfolio Assistant",
+      "category": "Generative AI / LLM",
+      "aliases": [
+        "AI Portfolio Assistant",
+        "AI portfolio chatbot",
+        "portfolio chatbot",
+        "portfolio AI",
+        "AI chatbot",
+        "portfolio assistant",
+        "personal AI assistant",
+        "personal chatbot",
+        "LLM portfolio",
+        "Generative AI portfolio",
+        "GenAI chatbot",
+        "RAG chatbot",
+        "RAG portfolio",
+        "portfolio RAG",
+        "AI assistant",
+        "conversational AI",
+        "portfolio conversational assistant"
+      ],
+      "description": "AI-powered conversational assistant integrated into a personal portfolio.",
+      "technologies": [
+        "Python",
+        "Generative AI",
+        "LLMs",
+        "RAG",
+        "Embeddings",
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "FastAPI"
+      ],
+      "details": [
+        "Developed an AI-powered conversational assistant that enables visitors to interact with and explore portfolio information through natural-language queries.",
+        "Built a chatbot interface to answer questions about skills, projects, education, experience, achievements, and professional background.",
+        "Implemented a backend API for query processing and context-aware response generation.",
+        "Used LLM and retrieval-based techniques to retrieve relevant portfolio information.",
+        "Integrated the AI assistant with the portfolio frontend to provide an interactive user experience."
+      ],
+      "links": {
+        "github": "ADD_GITHUB_LINK_HERE",
+        "demo": "ADD_PORTFOLIO_LINK_HERE"
+      }
+    },
+
+    {
+      "name": "Anime & Movie Recommendation System",
+      "category": "Machine Learning / Recommendation System",
+      "aliases": [
+        "Anime Recommendation System",
+        "Movie Recommendation System",
+        "Anime Recommender",
+        "Movie Recommender",
+        "Recommendation System",
+        "Recommendation Engine",
+        "Anime recommender system",
+        "Movie recommender system",
+        "anime recommendation",
+        "movie recommendation",
+        "similar anime",
+        "similar movies",
+        "similar movie recommendation",
+        "similar anime recommendation",
+        "content based recommendation",
+        "content based recommender",
+        "cosine similarity project",
+        "cosine similarity recommendation",
+        "ML recommendation project",
+        "recommendation project"
+      ],
+      "description": "Content-based recommendation system that recommends similar anime and movies using item similarity.",
+      "technologies": [
+        "Python",
+        "Pandas",
+        "NumPy",
+        "Scikit-learn",
+        "Cosine Similarity",
+        "Machine Learning",
+        "Streamlit"
+      ],
+      "details": [
+        "Developed a content-based recommendation system to recommend similar anime and movies.",
+        "Preprocessed and normalized relevant numerical and categorical features.",
+        "Calculated cosine similarity between items to measure similarity.",
+        "Implemented recommendation functionality based on cosine similarity scores.",
+        "Experimented with similarity threshold values to control the number of recommendations.",
+        "Built an interactive interface for selecting an anime or movie and generating recommendations."
+      ],
+      "links": {
+        "github": "ADD_GITHUB_LINK_HERE",
+        "demo": "ADD_STREAMLIT_LINK_HERE"
+      }
+    }
+  ],
+
+  "achievements": {
+    "items": [
+      "1st Place – Final-Year Project: AirPulse – Web-Based Heart Sound Classification.",
+      "NAIN Ideathon Winner: Secured ₹5 Lakhs Government Funding under NAIN 2.0.",
+      "Hackathon Participation: Contributed to hackathons with a focus on collaborative problem-solving, innovation, and rapid prototyping."
+    ],
+    "aliases": [
+      "achievements",
+      "awards",
+      "accomplishments",
+      "awards and achievements",
+      "major achievements",
+      "hackathon achievements",
+      "NAIN achievement",
+      "NAIN winner",
+      "project award",
+      "first place"
+    ]
+  },
+
+  "certifications": {
+    "items": [
+      "Deloitte Australia Data Analytics Job Simulation – Forage",
+      "Postman API Workshop – API testing, documentation, and integration.",
+      "Patent Searching & Drafting Workshop – Exposure to intellectual property, patent research, and drafting techniques.",
+      "DevOps Workshop – CI/CD, version control, and automation tools.",
+      "Entrepreneurship Awareness Workshop – Innovation and startup development."
+    ],
+    "aliases": [
+      "certifications",
+      "certificates",
+      "courses",
+      "workshops",
+      "professional certifications",
+      "training",
+      "credentials"
+    ]
+  },
+
+  "links": {
+    "portfolio": "ADD_PORTFOLIO_URL_HERE",
+    "linkedin": "ADD_LINKEDIN_URL_HERE",
+    "github": "ADD_GITHUB_URL_HERE",
+    "behance": "ADD_BEHANCE_URL_HERE",
+    "resume": "ADD_RESUME_DOWNLOAD_URL_HERE",
+    "aliases": {
+      "portfolio": [
+        "portfolio",
+        "personal portfolio",
+        "website",
+        "personal website",
+        "portfolio website"
+      ],
+      "linkedin": [
+        "LinkedIn",
+        "LinkedIn profile",
+        "professional profile"
+      ],
+      "github": [
+        "GitHub",
+        "GitHub profile",
+        "GitHub account",
+        "source code",
+        "repositories",
+        "projects code"
+      ],
+      "behance": [
+        "Behance",
+        "Behance profile",
+        "design portfolio",
+        "UI UX portfolio",
+        "design work"
+      ],
+      "resume": [
+        "resume",
+        "CV",
+        "curriculum vitae",
+        "download resume",
+        "resume download",
+        "Farhan resume"
+      ]
+    }
+  },
+
+  "contact": {
+    "email": "shaikfarhan3100@gmail.com",
+    "phone": "+91 9741881031",
+    "location": "Bangalore, India",
+    "aliases": [
+      "contact",
+      "contact details",
+      "contact information",
+      "email",
+      "phone number",
+      "mobile number",
+      "reach Farhan",
+      "contact Farhan",
+      "how to contact Farhan"
+    ],
+    "message": "For job opportunities, collaborations, project discussions, or other professional inquiries, visitors can contact Shaik Farhan through email or the portfolio contact form."
+  },
+
+  "career": {
+    "target_roles": [
+      "Data Scientist",
+      "Machine Learning Engineer",
+      "AI/ML Engineer",
+      "AI Engineer",
+      "Data Analyst"
+    ],
+    "aliases": [
+      "career",
+      "career goals",
+      "target roles",
+      "job roles",
+      "looking for jobs",
+      "job opportunities",
+      "career opportunities",
+      "what jobs is Farhan looking for",
+      "what role is Farhan looking for"
+    ],
+    "open_to": [
+      "Full-time opportunities",
+      "Internships",
+      "AI/ML projects",
+      "Data Science projects",
+      "Collaborations"
+    ]
+  }
+}
