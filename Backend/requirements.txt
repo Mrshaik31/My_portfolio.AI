@@ -3,6 +3,7 @@ uvicorn[standard]
 python-dotenv
 requests
 python-dotenv
+faiss-cpu
 #backend start using -> uvicorn main:app --reload
 
 
