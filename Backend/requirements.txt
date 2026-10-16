@@ -4,6 +4,7 @@ python-dotenv
 requests
 python-dotenv
 faiss-cpu
+sentence-transformers
 #backend start using -> uvicorn main:app --reload
 
 
