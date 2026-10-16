@@ -1,7 +1,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   // FastAPI backend endpoint
-  const API_URL = "http://127.0.0.1:8000/chat";
+  const API_URL = "https://my-portfolio-ai-iwea.onrender.com";
 
   // Connect to your existing HTML elements
   const toggle = document.getElementById("chatbotToggle");
