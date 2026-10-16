@@ -8,6 +8,12 @@ This module follows the logic from the Jupyter notebooks:
 - Create normalized embeddings and a FAISS inner-product index
 - Detect sections/projects and retrieve relevant context
 """
+import os
+
+# Limit CPU thread usage to reduce overhead
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 import json
 from pathlib import Path
@@ -168,8 +174,10 @@ elif isinstance(projects, dict):
 # EMBEDDINGS AND FAISS INDEX
 # ============================================================
 
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
-
+embedding_model = SentenceTransformer(
+    "sentence-transformers/all-MiniLM-L6-v2",
+    device="cpu"
+)
 chunk_texts = [chunk["text"] for chunk in all_chunks]
 
 if not chunk_texts:
